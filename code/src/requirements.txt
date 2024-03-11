@@ -1,0 +1,11 @@
+bokeh
+contextily
+geopandas
+joblib
+matplotlib
+numpy
+pandas
+scikit_learn
+scipy
+Shapely
+tqdm
