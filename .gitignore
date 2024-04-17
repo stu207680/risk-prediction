@@ -3,6 +3,7 @@
 *.csv
 *.zip
 
+*.pickle
 *.gpkg
 
 # Byte-compiled / optimized / DLL files
