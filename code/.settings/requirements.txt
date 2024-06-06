@@ -1,0 +1,11 @@
+cartopy
+cmocean
+colorama
+haversine
+h3
+matplotlib
+netcdf4
+networkx
+numpy
+pandas
+xarray
