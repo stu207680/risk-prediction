@@ -1,6 +1,6 @@
 from VCRA_init import model_builder
 
-from algorithms.ARSC_FC.utils.calculations.functions import costs_function_single_edge_static, is_dominated_function
+from algorithms.ARSC_FC.utils.calculations.functions import inputs_function, costs_function_single_edge_static, is_dominated_function
 
 from sklearn.neighbors import BallTree
 
@@ -14,6 +14,7 @@ import algorithms.ARSC_FC.utils.IO.visualization_manager
 
 import algorithms.ARSC_FC.ARSC
 
+import math
 import numpy as np
 import os.path
 import pandas as pd
@@ -22,6 +23,23 @@ import pandas as pd
 
 # main entry point of this runner!
 if __name__ == "__main__":
+  # hidden short-hand function to ensure an unique object instantiation.
+  def create_nodes(storage, dataframe, ball_tree, graph):
+    # hidden short-hand function to map a node to the nearest data entry.
+    def find_nearest_node(graph, coordinates):
+      minimum = math.inf, None
+      for node in list(graph.nodes()):
+        distance = abs(node.coordinates[0] - coordinates[0]) + abs(node.coordinates[1] - coordinates[1])
+        if minimum[0] > distance:
+          minimum = distance, node
+      return minimum[1]
+
+    source_node = find_nearest_node(graph = graph, coordinates = storage.dot_config["algorithm_parameter(s)"]["source_node"])
+    inputs_function(storage = storage, data = dataframe, ball_tree = ball_tree, node = source_node)
+    destination_node = find_nearest_node(graph = graph, coordinates = storage.dot_config["algorithm_parameter(s)"]["destination_node"])
+    inputs_function(storage = storage, data = dataframe, ball_tree = ball_tree, node = destination_node)
+    return source_node, destination_node
+
   # interpolates speed deltas between the minimum and maximum speed with k as stepssize
   def generate_speeds_function(min, max, k):
     return np.arange(max - (max - min) / (k + 1.0), min, -((max - min) / (k + 1.0)))
@@ -44,8 +62,7 @@ if __name__ == "__main__":
 
   # build the graph and set the algorithm parameters
   graph, _, _ = IO.file_manager.FILE_MANAGER().create_graph(create_function = algorithms.ARSC_FC.utils.IO.file_manager.FILE_MANAGER().create_H3_saronic_golf_graph, storage = storage, dataframe = geoDataframe)[1]
-  source_node = storage.dot_config["algorithm_parameter(s)"]["source_node"]
-  destination_node = storage.dot_config["algorithm_parameter(s)"]["destination_node"]
+  source_node, destination_node = create_nodes(storage = storage, dataframe = geoDataframe, ball_tree = ball_tree, graph = graph)
   start_date = storage.dot_config["algorithm_parameter(s)"]["start_date"]
   k = storage.dot_config["algorithm_parameter(s)"]["k"]
   speed_interval = storage.dot_config["algorithm_parameter(s)"]["speed_interval"]
