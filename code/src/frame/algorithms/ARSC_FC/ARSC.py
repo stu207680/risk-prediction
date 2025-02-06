@@ -91,24 +91,26 @@ class ALGORITHM_ARSC(algorithms.utils.meta_structures.algorithm_abstract.ALGORIT
     # checks which machine learning model configuration should be used:
     if storage.dot_config["data"]["ML_model"]:
       if not (os.path.exists(storage.dot_config["data"]["ML_model"]) and os.path.isfile(storage.dot_config["data"]["ML_model"])):
-        return "@error: model-file not found!", None
+        return "@error: model:model-file not found!", None
       storage.dot_config["data"]["ML_data"] = pd.read_pickle(storage.dot_config["data"]["ML_data"])
       storage.dot_config["data"]["ML_model"] = algorithms.ARSC_FC.utils.IO.file_manager.FILE_MANAGER().load_ML_model(storage = storage)[1]
-    elif storage.dot_config["data"]["ML_data"]:
-      if not (os.path.exists(storage.dot_config["data"]["ML_data"]) and os.path.isfile(storage.dot_config["data"]["ML_data"])):
+    else:
+      if not dataframe is None:
+        storage.dot_config["data"]["ML_data"] = dataframe
+      elif storage.dot_config["data"]["ML_data"]:
+        if not (os.path.exists(storage.dot_config["data"]["ML_data"]) and os.path.isfile(storage.dot_config["data"]["ML_data"])):
+          return "@error: model:data-file not found!", None
+        storage.dot_config["data"]["ML_data"] = pd.read_pickle(storage.dot_config["data"]["ML_data"])
+      else:
         return "@error: model:data-file not found!", None
-      storage.dot_config["data"]["ML_data"] = pd.read_pickle(storage.dot_config["data"]["ML_data"])
       encountering_pairs, results = encountering_vessels(data = storage.dot_config["data"]["ML_data"], dt_name = "datetime")
       file_ID = len(storage.results[storage.dot_config["algorithm_name"]])
       encountering_pairs.to_pickle(f"source_code/risk-prediction/code/data/.ML_model/{storage.file_name}_encountering_pairs [{file_ID + 1:04d}].pickle")
       results = homogenize_units(results)
       results.to_pickle(f"source_code/risk-prediction/code/data/.ML_model/{storage.file_name}_results [{file_ID + 1:04d}].pickle")
       ML_model = algorithms.ARSC_FC.utils.data_structures.ML_model.ML_MODEL().create_ML_model(storage = storage, ML_data = results)
-    else:
-      return "@error: model-file not found!", None
-    storage.dot_config["data"]["ML_model"] = ML_model
-    algorithms.ARSC_FC.utils.IO.file_manager.FILE_MANAGER().save_ML_model(storage = storage, ML_model = ML_model)
-    storage.dot_config["algorithm_parameter(s)"]["speed"] = max(speeds)
+      storage.dot_config["data"]["ML_model"] = ML_model
+      algorithms.ARSC_FC.utils.IO.file_manager.FILE_MANAGER().save_ML_model(storage = storage, ML_model = ML_model)
     # checks which Lipschitz embedding configuration should be used:
     if storage.dot_config["data"]["embedding"]:
       if not (os.path.exists(storage.dot_config["data"]["embedding"]) and os.path.isfile(storage.dot_config["data"]["embedding"])):
@@ -119,6 +121,7 @@ class ALGORITHM_ARSC(algorithms.utils.meta_structures.algorithm_abstract.ALGORIT
     elif not embedding:
       embedding = algorithms.ARSC_FC.utils.data_structures.embedding.EMBEDDING().create_embedding(storage = storage, graph = graph)
       algorithms.ARSC_FC.utils.IO.file_manager.FILE_MANAGER().save_embedding(storage = storage, embedding = embedding, graph = graph)
+    storage.dot_config["algorithm_parameter(s)"]["speed"] = max(speeds)
 
     import time
     start_time = time.time()

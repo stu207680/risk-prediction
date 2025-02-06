@@ -52,6 +52,7 @@ if __name__ == "__main__":
   storage.file_name = "ARSC"
   storage.results = {storage.dot_config["algorithm_name"]: []}
 
+  # geoDataframe = pd.read_pickle("source_code/risk-prediction/code/data/.ML_model/geoDataframe.pickle")
   # build the model
   if os.path.exists("source_code/risk-prediction/code/data/.ML_model/ARSC_ML_model [0001].ML_model") and os.path.isfile("source_code/risk-prediction/code/data/.ML_model/ARSC_ML_model [0001].ML_model"):
     storage.dot_config["data"]["ML_model"] = "source_code/risk-prediction/code/data/.ML_model/ARSC_ML_model [0001].ML_model"
@@ -69,7 +70,7 @@ if __name__ == "__main__":
 
   # execute the algorithm
   _, skyline_routes, _ = algorithms.ARSC_FC.ARSC.ALGORITHM_ARSC().execute_algorithm(argument_vector = [storage, costs_function_single_edge_static, is_dominated_function, None, (graph, source_node, destination_node), start_date, generate_speeds_function(min = speed_interval[0], max = speed_interval[1], k = k), geoDataframe, ball_tree])[1]
-  storage.results[storage.dot_config["algorithm_name"]].append(skyline_routes)
+  storage.results[storage.dot_config["algorithm_name"]].append((_, skyline_routes))
 
   # save the results and transform them into a parquet file
   IO.visualization_manager.VISUALIZATION_MANAGER().write_to_(write_function = algorithms.ARSC_FC.utils.IO.visualization_manager.VISUALIZATION_MANAGER().write_to_csv, storage = storage)

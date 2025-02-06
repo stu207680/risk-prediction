@@ -57,4 +57,4 @@ class PATH:
   
     if not self.destination_node.network_distance_estimations:
       self.destination_node.network_distance_estimations = calculate_network_distance_estimations(embedding = embedding, source_node = self.destination_node, destination_node = destination_node)
-    self.attributes_vector = [self.costs_vector[0] + self.destination_node.network_distance_estimations[0], self.costs_vector[1]]
+    self.attributes_vector = [self.costs_vector[0] + self.destination_node.network_distance_estimations, self.costs_vector[1]]
