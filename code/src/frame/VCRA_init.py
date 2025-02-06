@@ -5,14 +5,18 @@ import glob
 import numpy as np
 import pandas as pd
 import tqdm
+from datetime import datetime
 
-GEO_DATA_FILE_PATH = f"source_code/risk-prediction/code/data/data/.csv/geodata/harbours" 
+GEO_DATA_FILE_PATH = f"./code/data/data/.csv/geodata/harbours"
 
 def model_builder(file_paths):
+  print (f'{datetime.now()} Building the model...')
   dataframe = pd.DataFrame()
   for file_path in file_paths:
+    print (f'{datetime.now()} Filepath {file_path}')
     files = glob.glob(file_path + "/*.csv")
     for file in files:
+      print (f'{datetime.now()} File {file}')
       dataframe = pd.concat([dataframe, pd.read_csv(file)])
   dataframe = dataframe.sort_values(by = ["t"]).drop_duplicates(subset = ["t", "vessel_id"], keep = "first")
   geoDataframe = geoPd.GeoDataFrame(dataframe, crs = 4326, geometry = geoPd.points_from_xy(dataframe["lon"], dataframe["lat"]))
@@ -20,6 +24,8 @@ def model_builder(file_paths):
   geoDataframe.rename({"t": "timestamp"}, axis = 1, inplace = True)
   geoDataframe["datetime"] = pd.to_datetime(geoDataframe["timestamp"], unit = "ms")
   geoDataframe["timestamp"] = geoDataframe["timestamp"] / 10**3
+
+  print (f'{datetime.now()} Geo-DataFrame ready with shape: {geoDataframe.shape}')
 
   # geoDataframe = algorithms.ARSC_FC.utils.calculations.STT.add_speed(geoDataframe, o_id = ["mmsi", "traj_nr"], ts = "timestamp", speed = "speed", geometry = "geometry")
   # geoDataframe = geoDataframe.loc[geoDataframe.speed <= 50].copy()
@@ -46,5 +52,5 @@ def model_builder(file_paths):
 
   geoDataframe.insert(geoDataframe.columns.get_loc("course") + 1, "course_rad", geoDataframe.course.apply(lambda x: np.deg2rad(x)))
 
-  geoDataframe.to_pickle(f"source_code/risk-prediction/code/data/.ML_model/geoDataframe.pickle")
+  geoDataframe.to_pickle(f"./code/data/.ML_model/geoDataframe.pickle")
   return geoDataframe
