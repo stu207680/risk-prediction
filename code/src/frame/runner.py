@@ -30,9 +30,11 @@ if __name__ == "__main__":
     def find_nearest_node(graph, coordinates):
       minimum = math.inf, None
       for node in list(graph.nodes()):
+        print (f'{datetime.now()} Finding nearest node to {coordinates}: processing {node.coordinates}')
         distance = abs(node.coordinates[0] - coordinates[0]) + abs(node.coordinates[1] - coordinates[1])
         if minimum[0] > distance:
           minimum = distance, node
+      print (f'{datetime.now()} Finding nearest node to {coordinates}: returning {minimum[1].coordinates}')
       return minimum[1]
 
     source_node = find_nearest_node(graph = graph, coordinates = storage.dot_config["algorithm_parameter(s)"]["source_node"])
@@ -69,6 +71,8 @@ if __name__ == "__main__":
 
   print (f'{datetime.now()} Creating nodes...')
   source_node, destination_node = create_nodes(storage = storage, dataframe = geoDataframe, ball_tree = ball_tree, graph = graph)
+  print (f'{datetime.now()} From {source_node.coordinates}, to {destination_node.coordinates}...')
+
   start_date = storage.dot_config["algorithm_parameter(s)"]["start_date"]
   k = storage.dot_config["algorithm_parameter(s)"]["k"]
   speed_interval = storage.dot_config["algorithm_parameter(s)"]["speed_interval"]
