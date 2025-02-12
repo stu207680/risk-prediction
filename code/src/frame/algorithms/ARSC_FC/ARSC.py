@@ -89,7 +89,7 @@ class ALGORITHM_ARSC(algorithms.utils.meta_structures.algorithm_abstract.ALGORIT
           expanded_route.costs_vector_history = sub_route.costs_vector_history + [costs_delta]
           expanded_route.speeds_history = sub_route.speeds_history + [speed]
           expanded_routes.append(expanded_route)
-          print (f'Added route {expanded_route}')
+          #print (f'Added route {expanded_route}')
       return expanded_routes, MACRO_OVERALL_PATHS + len(expanded_routes)
 
     # checks which machine learning model configuration should be used:
@@ -140,7 +140,7 @@ class ALGORITHM_ARSC(algorithms.utils.meta_structures.algorithm_abstract.ALGORIT
     MACRO_OVERALL_PATHS += 1
     priority_queue.put((0, source_node))
     while not (source_node == destination_node or priority_queue.empty()):
-      print (f'Processing node: {source_node}')
+      #print (f'Processing node: {source_node}')
       _, v_i = priority_queue.get()
       sub_route_index = 0
       while sub_route_index < len(v_i.sub_route_skyline):

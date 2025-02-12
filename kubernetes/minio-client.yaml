@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio-client
+  template:
+    metadata:
+      labels:
+        app: minio-client
+    spec:
+      containers:
+        - name: minio-client
+          image: docker.io/bitnami/minio-client:2024-debian-12
+          command: ["bash", "-c", "sleep infinity"]
+          stdin: true
+          tty: true
+          resources: {}
+          env:
+            - name: MINIO_SERVER_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: root-user
+                  optional: false
+            - name: MINIO_SERVER_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: root-password
+                  optional: false
+            - name: MINIO_SERVER_HOST
+              value: test-minio
+            - name: MINIO_SERVER_PORT_NUMBER
+              value: "9000"
+            - name: MINIO_SERVER_SCHEME
+              value: http

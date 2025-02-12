@@ -1,0 +1,29 @@
+---
+volumePermissions:
+  enabled: true
+
+podSecurityContext:
+  enabled: false
+
+containerSecurityContext:
+  enabled: false
+
+mode: standalone
+
+disableWebUI: false
+
+persistence:
+  enabled: true
+
+resources:
+  requests:
+    memory: 1Gi
+
+auth:
+  existingSecret: minio-credentials
+
+service:
+  type: NodePort
+  nodePorts:
+    api: ""
+    console: ""

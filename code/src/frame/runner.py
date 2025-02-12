@@ -19,6 +19,9 @@ import numpy as np
 import os.path
 import pandas as pd
 from datetime import datetime
+import argparse
+import ast
+
 # import pyarrow as pa
 # import pyarrow.parquet as pq
 
@@ -30,7 +33,7 @@ if __name__ == "__main__":
     def find_nearest_node(graph, coordinates):
       minimum = math.inf, None
       for node in list(graph.nodes()):
-        print (f'{datetime.now()} Finding nearest node to {coordinates}: processing {node.coordinates}')
+        #print (f'{datetime.now()} Finding nearest node to {coordinates}: processing {node.coordinates}')
         distance = abs(node.coordinates[0] - coordinates[0]) + abs(node.coordinates[1] - coordinates[1])
         if minimum[0] > distance:
           minimum = distance, node
@@ -47,11 +50,35 @@ if __name__ == "__main__":
   def generate_speeds_function(min, max, k):
     return np.arange(max - (max - min) / (k + 1.0), min, -((max - min) / (k + 1.0)))
 
+  def parse_arguments():
+    parser = argparse.ArgumentParser(description="Parse optional parameters.")
+    parser.add_argument('--source', type=str, default=None, help="Source node (default: None)")
+    parser.add_argument('--destination', type=str, default=None, help="Destination node (default: None)")
+    parser.add_argument('--resolution', type=int, default=None, help="H3 resolution (default: None)")
+
+    return parser.parse_args()
+
+  args = parse_arguments()
+
   # initialize the storage and read the configuration
   storage = state_storage.STATE_STORAGE()
   storage.path_root_code = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
   storage.raw_file_path = f"{storage.path_root_code}/.config/ARSC/ARSC.config"
   storage = IO.file_manager.FILE_MANAGER().read_dot_config(storage = storage)[1]
+
+  if args.source is not None:
+    storage.dot_config["algorithm_parameter(s)"]["source_node"] = ast.literal_eval(args.source)
+  if args.destination is not None:
+    storage.dot_config["algorithm_parameter(s)"]["destination_node"] = ast.literal_eval(args.destination)
+  if args.resolution is not None:
+    storage.dot_config["algorithm_parameter(s)"]["H3_resolution"] = int(args.resolution)
+
+  print (f'{datetime.now()} H3_resolution: {storage.dot_config["algorithm_parameter(s)"]["H3_resolution"]}')
+
+  print (f'{datetime.now()} source_node: {storage.dot_config["algorithm_parameter(s)"]["source_node"]}')
+
+  print (f'{datetime.now()} destination_node: {storage.dot_config["algorithm_parameter(s)"]["destination_node"]}')
+
   storage.file_name = "ARSC"
   storage.results = {storage.dot_config["algorithm_name"]: []}
 

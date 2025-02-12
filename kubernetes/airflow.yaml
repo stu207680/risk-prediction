@@ -1,0 +1,168 @@
+---
+apiVersion: airflow.stackable.tech/v1alpha1
+kind: AirflowCluster
+metadata:
+  name: airflow
+spec:
+  image:
+    productVersion: 2.10.2
+  clusterConfig:
+    listenerClass: external-unstable
+    loadExamples: false
+    exposeConfig: false
+    credentialsSecret: airflow-credentials
+    volumes:
+      - name: airflow-dags
+        configMap:
+          name: airflow-dags
+      - name: external-pvc
+        persistentVolumeClaim:
+          claimName: pvc-airflow
+    volumeMounts:
+      - name: airflow-dags
+        mountPath: /dags/pod.py
+        subPath: pod.py
+      - name: external-pvc
+        mountPath: /tmp
+  webservers:
+    roleGroups:
+      default:
+        envOverrides: &envOverrides
+          AIRFLOW__CORE__DAGS_FOLDER: "/dags"
+          AIRFLOW_CONN_MINIO_CONN: "aws://minioAccessKey:BB5gkfdlk6TH78@/?endpoint_url=http%3A%2F%2Fairflow-minio%3A9000"
+          # needed for pendulum. See https://github.com/sdispater/pendulum/issues/791 and https://unix.stackexchange.com/a/732290
+          TZ: "Europe/Berlin"
+        replicas: 1
+  celeryExecutors:
+    roleGroups:
+      default:
+        config:
+          resources:
+            cpu:
+              min: "1"
+              max: "2"
+            memory:
+              limit: 4Gi
+        envOverrides: *envOverrides
+        replicas: 1
+  schedulers:
+    roleGroups:
+      default:
+        envOverrides: *envOverrides
+        replicas: 1
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: airflow-dags
+data:
+  pod.py: |
+    from __future__ import annotations
+
+    import os
+    import pathlib
+    import pendulum
+
+    from datetime import datetime
+    from pathlib import Path
+    from kubernetes.client import models as k8s
+
+    from airflow import DAG
+    from airflow.kubernetes.secret import Secret
+    from airflow.operators.bash import BashOperator
+    from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
+    from airflow.operators.python import PythonOperator
+    from airflow.hooks.S3_hook import S3Hook
+
+    def upload_to_s3(params: dict) -> None:
+      hook = S3Hook('minio_conn')
+      results_dir = '/tmp/code/data/.result/.csv/'
+      directory_path = pathlib.Path(results_dir)
+      for p in directory_path.rglob("*"):
+        if Path(p).is_file():
+          hook.load_file(
+            filename=p.absolute(),
+            bucket_name=params['output_bucket'],
+            # strip path from key
+            key=os.path.relpath(p, '/tmp/code/data/.result/.csv'),
+            replace=True,
+          )
+
+    pvc_volume = k8s.V1Volume(
+      name="external-pvc",
+      persistent_volume_claim=k8s.V1PersistentVolumeClaimVolumeSource(claim_name="pvc-airflow"),
+    )
+
+    pvc_volume_mount = k8s.V1VolumeMount(
+      name="external-pvc", mount_path="/tmp"
+    )
+
+    affinity = k8s.V1Affinity(
+      pod_affinity = k8s.V1PodAffinity(
+        required_during_scheduling_ignored_during_execution=[
+          k8s.V1PodAffinityTerm(
+            label_selector=k8s.V1LabelSelector(
+              match_expressions=[
+                  k8s.V1LabelSelectorRequirement(
+                    key="app.kubernetes.io/instance",
+                    operator="In",
+                    values=["airflow"]
+                  )
+              ]
+            ),
+            topology_key="kubernetes.io/hostname"
+          ),
+        ]
+      )
+    )
+
+    with DAG(
+        dag_id="run_risk_prediction_via_pod_operator",
+        params={
+          "source": "(37.942554, 23.636398)",
+          "destination": "(37.503907, 23.453204)",
+          "resolution": "6",
+          "output_bucket": ""
+        },
+        schedule=None,
+        start_date=pendulum.datetime(2024, 9, 1),
+        tags=["UC2", "Risk Prediction"],
+        catchup=False
+    ) as dag:
+
+      run_risk_prediction = KubernetesPodOperator(
+          image="docker.stackable.tech/gaia-x/marispacex-uc2/risk-prediction:0.1",
+          image_pull_policy="IfNotPresent",
+          cmds=["/bin/bash", "-x", "-euo", "pipefail", "-c"],
+          arguments=["cd /tmp && python code/src/frame/runner.py --source '{{ params.source }}' --destination '{{ params.destination }}' --resolution {{ params.resolution }}"],
+          volumes=[pvc_volume],
+          volume_mounts=[pvc_volume_mount],
+          name="run-risk-prediction",
+          task_id="task",
+          affinity=affinity,
+          on_finish_action="delete_pod",
+          startup_timeout_seconds=600
+      )
+
+      upload_to_s3 = PythonOperator(
+        task_id='upload_to_s3',
+        python_callable=upload_to_s3
+      )
+
+      run_risk_prediction >> upload_to_s3
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: airflow-credentials
+type: Opaque
+stringData:
+  adminUser.username: airflow
+  adminUser.firstname: Airflow
+  adminUser.lastname: Admin
+  adminUser.email: airflow@airflow.com
+  adminUser.password: airflow
+  connections.secretKey: thisISaSECRET_1234
+  connections.sqlalchemyDatabaseUri: postgresql+psycopg2://airflow:airflow@airflow-postgresql/airflow
+  connections.celeryResultBackend: db+postgresql://airflow:airflow@airflow-postgresql/airflow
+  connections.celeryBrokerUrl: redis://:redis@airflow-redis-master:6379/0
