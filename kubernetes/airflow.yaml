@@ -7,6 +7,18 @@ spec:
   image:
     productVersion: 2.10.2
   clusterConfig:
+    authorization:
+      opa:
+        configMapName: opa
+        package: airflow
+        cache:
+          entryTimeToLive: 10s
+          maxEntries: 100000
+    authentication:
+      - authenticationClass: kc-airflow
+        oidc:
+          clientCredentialsSecret: kc-airflow-oidc-config
+        userRegistrationRole: Admin
     listenerClass: external-unstable
     loadExamples: false
     exposeConfig: false
@@ -25,6 +37,9 @@ spec:
       - name: external-pvc
         mountPath: /tmp
   webservers:
+    configOverrides:
+      webserver_config.py:
+        AUTH_TYPE: "AUTH_OAUTH"
     roleGroups:
       default:
         envOverrides: &envOverrides

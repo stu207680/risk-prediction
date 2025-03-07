@@ -1,0 +1,19 @@
+---
+apiVersion: authentication.stackable.tech/v1alpha1
+kind: AuthenticationClass
+metadata:
+  name: kc-airflow
+spec:
+  provider:
+    oidc:
+      hostname: kc.ssi.stackable.tech
+      rootPath: /realms/test
+      principalClaim: preferred_username
+      scopes:
+      - openid
+      - profile
+      tls:
+        verification:
+          server:
+            caCert:
+              webPki: {}

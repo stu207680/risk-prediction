@@ -65,6 +65,7 @@ Deploy airflow cluster with ConfigMap scripts:
 ```shell
 kubectl -n $NAMESPACE apply -f ./kubernetes/pvc.yaml
 kubectl -n $NAMESPACE apply -f ./kubernetes/airflow.yaml
+kubectl -n $NAMESPACE apply -f ./kubernetes/auth-class.yaml
 ```
 
 Copy model dependencies directly to pvc-mount of the single airflow worker, thus keeping all model resources private:
