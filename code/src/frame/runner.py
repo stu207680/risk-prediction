@@ -52,13 +52,14 @@ if __name__ == "__main__":
   storage.file_name = "ARSC"
   storage.results = {storage.dot_config["algorithm_name"]: []}
 
-  # geoDataframe = pd.read_pickle("source_code/risk-prediction/code/data/.ML_model/geoDataframe.pickle")
   # build the model
   if os.path.exists("source_code/risk-prediction/code/data/.ML_model/ARSC_ML_model [0001].ML_model") and os.path.isfile("source_code/risk-prediction/code/data/.ML_model/ARSC_ML_model [0001].ML_model"):
     storage.dot_config["data"]["ML_model"] = "source_code/risk-prediction/code/data/.ML_model/ARSC_ML_model [0001].ML_model"
-    geoDataframe = pd.read_pickle("source_code/risk-prediction/code/data/.ML_model/geoDataframe.pickle")
   else:
     geoDataframe = model_builder(file_paths = storage.dot_config["data"]["file_paths"])
+    pd.to_pickle(geoDataframe, "source_code/risk-prediction/code/data/.ML_model/geoDataframe.pickle")
+  storage.dot_config["data"]["ML_data"] = "source_code/risk-prediction/code/data/.ML_model/geoDataframe.pickle"
+  geoDataframe = pd.read_pickle("source_code/risk-prediction/code/data/.ML_model/geoDataframe.pickle")
   ball_tree = BallTree(data = np.deg2rad(geoDataframe.geometry.get_coordinates())[["y", "x"]], leaf_size = 40, metric = "haversine")
 
   # build the graph and set the algorithm parameters

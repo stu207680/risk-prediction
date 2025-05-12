@@ -90,10 +90,12 @@ class ALGORITHM_ARSC(algorithms.utils.meta_structures.algorithm_abstract.ALGORIT
 
     # checks which machine learning model configuration should be used:
     if storage.dot_config["data"]["ML_model"]:
+      if not (os.path.exists(storage.dot_config["data"]["ML_data"]) and os.path.isfile(storage.dot_config["data"]["ML_data"])):
+        return "@error: model:data-file not found!", None
       if not (os.path.exists(storage.dot_config["data"]["ML_model"]) and os.path.isfile(storage.dot_config["data"]["ML_model"])):
         return "@error: model:model-file not found!", None
-      storage.dot_config["data"]["ML_data"] = pd.read_pickle(storage.dot_config["data"]["ML_data"])
       storage.dot_config["data"]["ML_model"] = algorithms.ARSC_FC.utils.IO.file_manager.FILE_MANAGER().load_ML_model(storage = storage)[1]
+      storage.dot_config["data"]["ML_data"] = pd.read_pickle(storage.dot_config["data"]["ML_data"])
     else:
       if not dataframe is None:
         storage.dot_config["data"]["ML_data"] = dataframe
