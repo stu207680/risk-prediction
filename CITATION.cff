@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "Please cite the associated paper when using these research materials."
+type: software
+title: "A Collision-Risk-Aware Skyline Routing Framework for Maritime Navigation — research materials"
+authors:
+  - family-names: Michalski
+    given-names: Patrik Thomas
+    orcid: "https://orcid.org/0009-0003-0284-408X"
+repository-code: "https://github.com/stu207680/risk-prediction"
+license: MIT
+preferred-citation:
+  type: conference-paper
+  title: "A Collision-Risk-Aware Skyline Routing Framework for Maritime Navigation"
+  authors:
+    - family-names: "Michalski"
+      given-names: "Patrik Thomas"
+    - family-names: "Preuß"
+      given-names: "Niko"
+    - family-names: "Renz"
+      given-names: "Matthias"
+    - family-names: "Tritsarolis"
+      given-names: "Andreas"
+    - family-names: "Pelekis"
+      given-names: "Nikos"
+    - family-names: "Theodoridis"
+      given-names: "Yannis"
+  year: 2026
+  doi: "10.1109/MDM71479.2026.00017"
+  collection-title: "27th IEEE International Conference on Mobile Data Management (MDM)"
